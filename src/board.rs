@@ -6,7 +6,7 @@ type Size = Position;
 pub enum Block{
     Door,
     Wall,
-    Block(Colour, u32),
+    Block(Colour, i32),
     Empty,
 }
 
@@ -128,5 +128,39 @@ impl Board {
 
     pub fn undo(&mut self) {
         unimplemented!();
+    }
+
+    pub fn from(level_data: &str) -> Self {
+        let rows: Vec<String> = level_data.split("\n").map(|x| x.to_string()).collect();
+        let size: Vec<usize> = rows[0].split(" ").map(|x| x.parse::<usize>().unwrap()).collect();
+        let board_size: Size = (size[0], size[1]);
+        let mut board: Vec<Vec<Block>> = Vec::new();
+        for i in 0..size[0] {
+            let row: Vec<Block> = rows[i+1].chars().map(|x| {
+                match x {
+                    '#' => Block::Wall,
+                    'D' => Block::Door,
+                    _ => Block::Empty
+                }
+            }).collect();
+            board.push(row);
+        }
+        let player_position_vec: Vec<usize> = rows[size[0] + 1].split(" ").map(|x| x.parse::<usize>().unwrap()).collect();
+        let player_position: Position = (player_position_vec[0], player_position_vec[1]);
+        let number_of_blocks = rows[size[0] + 2].parse::<u32>().unwrap();
+        for i in 0..number_of_blocks {
+            let block_data: Vec<i64> = rows[i as usize + size[0] + 3].split(" ").map(|x| x.parse::<i64>().unwrap()).collect();
+            board[block_data[1] as usize][block_data[0] as usize] = Block::Block(
+                (block_data[2] as u8, block_data[3] as u8, block_data[4] as u8),
+                block_data[5] as i32
+            )
+        }
+        Board{
+            board: board,
+            player_has_won: false,
+            player_position: player_position,
+            size: board_size,
+            snapshots: Vec::new(),
+        }
     }
 }
